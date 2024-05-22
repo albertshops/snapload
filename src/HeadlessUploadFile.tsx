@@ -26,7 +26,7 @@ export type CustomFile = {
   >]-?: NonNullable<Context[K]>;
 } & { reset: () => void };
 
-export default function FileUpload(props: {
+export default function UploadFile(props: {
   keyName?: string | undefined;
   onFileChange?: (file: File | undefined) => void;
   onUploadComplete?: (keyName: string) => void;
@@ -63,7 +63,7 @@ export default function FileUpload(props: {
     setBlobUrl(URL.createObjectURL(file));
     setUploading(true);
     setProgress(0);
-    await emulateFileUpload((progress) => setProgress(progress));
+    await emulateUploadFile((progress) => setProgress(progress));
     setUploading(false);
 
     if (props.onUploadComplete) {
@@ -98,7 +98,7 @@ export default function FileUpload(props: {
   );
 }
 
-FileUpload.Trigger = function Trigger(props: ComponentProps<"button">) {
+UploadFile.Trigger = function Trigger(props: ComponentProps<"button">) {
   const { ref } = useContext(Context);
   return (
     <button {...props} onClick={() => ref.current?.click()}>
@@ -107,7 +107,7 @@ FileUpload.Trigger = function Trigger(props: ComponentProps<"button">) {
   );
 };
 
-function emulateFileUpload(
+function emulateUploadFile(
   onProgress: (percentage: number) => void,
 ): Promise<void> {
   return new Promise((resolve) => {

@@ -1,5 +1,5 @@
 import { PropsWithChildren, useState } from "react";
-import HeadlessFileUpload, { type CustomFile } from "./HeadlessFileUpload";
+import HeadlessUploadFile, { type CustomFile } from "./HeadlessUploadFile";
 import { Button } from "./components/ui/button";
 import { cn } from "./utils";
 import { X as RemoveIcon } from "lucide-react";
@@ -33,7 +33,7 @@ export function ImageField(props: {
   const [hover, setHover] = useState(false);
 
   return (
-    <HeadlessFileUpload
+    <HeadlessUploadFile
       keyName={props.keyName}
       onFileChange={props.onFileChange}
       onUploadComplete={props.onUploadComplete}
@@ -41,7 +41,7 @@ export function ImageField(props: {
       {(file) => {
         return (
           <div className="flex flex-col gap-1">
-            <HeadlessFileUpload.Trigger
+            <HeadlessUploadFile.Trigger
               className={cn(
                 "w-96 aspect-video rounded border relative flex justify-center items-center overflow-hidden",
                 { "border-dashed": file == undefined },
@@ -67,39 +67,39 @@ export function ImageField(props: {
                   </Overlay>
                 </>
               )}
-            </HeadlessFileUpload.Trigger>
+            </HeadlessUploadFile.Trigger>
 
             <div className="w-96 flex justify-between">{fileField(file)}</div>
           </div>
         );
       }}
-    </HeadlessFileUpload>
+    </HeadlessUploadFile>
   );
 }
 
 export function FileField(props: Props) {
   return (
-    <HeadlessFileUpload
+    <HeadlessUploadFile
       keyName={props.keyName}
       onFileChange={props.onFileChange}
       onUploadComplete={props.onUploadComplete}
     >
       {fileField}
-    </HeadlessFileUpload>
+    </HeadlessUploadFile>
   );
 }
 
 function fileField(file: CustomFile | undefined) {
   const chooseFile = (
-    <HeadlessFileUpload.Trigger className="border px-3 py-2 rounded text-sm w-full flex font-semibold hover:bg-zinc-100 transition text-zinc-800">
+    <HeadlessUploadFile.Trigger className="border px-3 py-2 rounded text-sm w-full flex font-semibold hover:bg-zinc-100 transition text-zinc-800">
       Choose file...
-    </HeadlessFileUpload.Trigger>
+    </HeadlessUploadFile.Trigger>
   );
 
   if (file)
     return (
       <div className="border rounded text-sm w-full flex transition text-zinc-800 justify-between overflow-hidden">
-        <HeadlessFileUpload.Trigger className="flex-grow hover:bg-zinc-100 transition relative">
+        <HeadlessUploadFile.Trigger className="flex-grow hover:bg-zinc-100 transition relative">
           <div className="px-3 py-2 flex">{file.name}</div>
           {file.uploading && (
             <div
@@ -107,7 +107,7 @@ function fileField(file: CustomFile | undefined) {
               style={{ transform: `scaleX(${file.progress / 100})` }}
             />
           )}
-        </HeadlessFileUpload.Trigger>
+        </HeadlessUploadFile.Trigger>
         <span className="border-r" />
         <button
           className="px-2 hover:bg-zinc-100 transition"
