@@ -1,114 +1,122 @@
-import { v4 } from "uuid";
-import {
-  PropsWithChildren,
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { CircularProgressbar } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
 
-type Context = {
-  name: string | undefined;
-  uuid: string | undefined;
-  ref: React.RefObject<HTMLInputElement>;
-  progress: number;
-  uploading: boolean;
-  blobUrl: string | undefined;
-};
+import HeadlessFileUpload from "./HeadlessFileUpload";
+import { Button } from "./components/ui/button";
+import { cn } from "./utils";
+import { X as RemoveIcon } from "lucide-react";
+import { useState } from "react";
 
-const Context = createContext<Context>(undefined as any);
+/*
+image field
+file field
+generic upload
+*/
 
-export default function FileUpload(props: {
-  keyName: string | undefined;
+type Props = {
+  keyName?: string | undefined;
   onFileChange?: (file: File | undefined) => void;
   onUploadComplete?: (keyName: string) => void;
-  children: (
-    args:
-      | {
-          [K in keyof Pick<
-            Context,
-            "progress" | "uploading" | "uuid" | "name" | "blobUrl"
-          >]-?: NonNullable<Context[K]>;
-        }
-      | undefined,
-  ) => React.ReactNode;
+  className?: string;
+};
+
+export function ImageField(props: {
+  keyName?: string | undefined;
+  onFileChange?: (file: File | undefined) => void;
+  onUploadComplete?: (keyName: string) => void;
+  className?: string;
 }) {
-  const ref = useRef<HTMLInputElement>(null);
-  const [progress, setProgress] = useState(0);
-  const [uploading, setUploading] = useState(false);
-  const [blobUrl, setBlobUrl] = useState<string>();
-  const [uuid, setUuid] = useState<string>();
-  const [name, setName] = useState<string>();
-
-  useEffect(() => {
-    const [uuid, name] = props.keyName?.split("/") ?? [undefined, undefined];
-    setUuid(uuid);
-    setName(name);
-    setProgress(0);
-    setUploading(false);
-    setBlobUrl(undefined);
-  }, [props.keyName]);
-
-  const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files?.length) return;
-    if (event.target.files[0] == undefined) return;
-    const file = event.target.files[0];
-    if (props.onFileChange) props.onFileChange(file);
-
-    const uuid = v4();
-
-    setUuid(uuid);
-    setName(file.name);
-    setBlobUrl(URL.createObjectURL(file));
-    setUploading(true);
-    await emulateFileUpload((progress) => setProgress(progress));
-    setUploading(false);
-
-    if (props.onUploadComplete) {
-      const keyName = `${v4()}/${file.name}`;
-      props.onUploadComplete(keyName);
-    }
-  };
-
-  const render = () => {
-    if (blobUrl && uuid && name)
-      return props.children({ uuid, name, uploading, progress, blobUrl });
-    return props.children(undefined);
-  };
+  const [hover, setHover] = useState(false);
 
   return (
-    <Context.Provider value={{ uuid, name, ref, progress, uploading, blobUrl }}>
-      {render()}
-      <input
-        type="file"
-        ref={ref}
-        style={{ display: "none" }}
-        onChange={handleChange}
-      />
-    </Context.Provider>
+    <HeadlessFileUpload
+      keyName={props.keyName}
+      onFileChange={props.onFileChange}
+      onUploadComplete={props.onUploadComplete}
+    >
+      {(file) => {
+        return (
+          <div className="flex flex-col gap-1">
+            <HeadlessFileUpload.Trigger
+              className="border w-96 aspect-video rounded border-dashed relative flex justify-center items-center overflow-hidden"
+              onMouseEnter={() => setHover(true)}
+              onMouseLeave={() => setHover(false)}
+            >
+              {file == undefined ? (
+                <Button>Upload</Button>
+              ) : (
+                <>
+                  <img
+                    className="object-cover absolute h-full w-full"
+                    src={file.blobUrl}
+                  />
+
+                  <div
+                    className={cn(
+                      "absolute inset-0 bg-zinc-100/50 flex justify-center items-center transition opacity-0",
+                      { "opacity-100": file.uploading && file.progress < 100 },
+                    )}
+                  >
+                    <div className="h-20 w-20">
+                      <CircularProgressbar value={file.progress} />
+                    </div>
+                  </div>
+                </>
+              )}
+            </HeadlessFileUpload.Trigger>
+            <HeadlessFileUpload.Trigger
+              onMouseEnter={() => setHover(true)}
+              onMouseLeave={() => setHover(false)}
+            >
+              <Button variant="outline" className="w-96 flex justify-between">
+                {(() => {
+                  if (hover) return <span>Choose file...</span>;
+                  if (file)
+                    return (
+                      <>
+                        <span>{file.name}</span>
+                        <button className="p-2 pr-0">
+                          <RemoveIcon className="w-4 text-red-600" />
+                        </button>
+                      </>
+                    );
+
+                  return <span>Choose file...</span>;
+                })()}
+              </Button>
+            </HeadlessFileUpload.Trigger>
+          </div>
+        );
+      }}
+    </HeadlessFileUpload>
   );
 }
 
-FileUpload.Trigger = function Trigger(props: PropsWithChildren) {
-  const { ref } = useContext(Context);
-  return <button onClick={() => ref.current?.click()}>{props.children}</button>;
-};
-
-function emulateFileUpload(
-  onProgress: (percentage: number) => void,
-): Promise<void> {
-  return new Promise((resolve) => {
-    let percentage = 0;
-
-    const interval = setInterval(() => {
-      percentage += 10;
-      onProgress(percentage);
-
-      if (percentage >= 100) {
-        clearInterval(interval);
-        resolve();
-      }
-    }, 200);
-  });
+export function FileField(props: Props) {
+  return (
+    <HeadlessFileUpload
+      keyName={props.keyName}
+      onFileChange={props.onFileChange}
+      onUploadComplete={props.onUploadComplete}
+    >
+      {(file) => {
+        return (
+          <HeadlessFileUpload.Trigger>
+            <Button variant="outline" className="w-96 flex justify-between">
+              {file ? (
+                <>
+                  <span>{file.name}</span>
+                  <button className="p-2 pr-0">
+                    <RemoveIcon className="w-4" />
+                  </button>
+                </>
+              ) : (
+                <span>Choose file...</span>
+              )}
+            </Button>
+          </HeadlessFileUpload.Trigger>
+        );
+      }}
+    </HeadlessFileUpload>
+  );
 }
