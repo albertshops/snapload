@@ -13,21 +13,36 @@ function App() {
   return (
     <div className="p-10">
       <Root value={value} onChange={setValue}>
-        <Trigger>click me</Trigger>
-        <Value>{(value) => <div>value: {value}</div>}</Value>
+        <File>
+          {(file) => {
+            if (file.name == undefined) return <Trigger>nothing</Trigger>;
+            return (
+              <div>
+                <p>uploading: {file.uploading ? "yes" : "no"}</p>
+                <p>progress: {file.progress}</p>
+                <Trigger>
+                  keyName: {file.uuid}/{file.name}
+                </Trigger>
+              </div>
+            );
+          }}
+        </File>
       </Root>
+
+      <button onClick={() => setValue("id/name.jpg")}>change</button>
     </div>
   );
 }
 
 export default App;
 
-// fileIds will be <uuid>/<file-name>
-
 type Context = {
-  value: string | undefined;
-  setValue: (value: string | undefined) => void;
+  name: string | undefined;
+  uuid: string | undefined;
+  setKeyName: (keyName: string | undefined) => void;
   ref: React.RefObject<HTMLInputElement>;
+  progress: number;
+  uploading: boolean;
 };
 
 const Context = createContext<Context>(undefined as any);
@@ -38,20 +53,30 @@ function Root(
     onChange: (value: string | undefined) => void;
   }>,
 ) {
-  const value = props.value;
-  const setValue = props.onChange;
+  const [uuid, name] = props.value?.split("/") ?? [undefined, undefined];
+
+  const setKeyName = props.onChange;
   const ref = useRef<HTMLInputElement>(null);
+  const [progress, setProgress] = useState(0);
+  const [uploading, setUploading] = useState(false);
 
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files?.length) return;
     if (event.target.files[0] == undefined) return;
     const file = event.target.files[0];
-    const fileKey = `${v4()}/${file.name}`;
-    setValue(fileKey);
+    const keyName = `${v4()}/${file.name}`;
+
+    setKeyName(keyName);
+
+    setUploading(true);
+    await emulateFileUpload((progress) => setProgress(progress));
+    setUploading(false);
   };
 
   return (
-    <Context.Provider value={{ value, setValue, ref }}>
+    <Context.Provider
+      value={{ uuid, name, setKeyName, ref, progress, uploading }}
+    >
       {props.children}
       <input
         type="file"
@@ -79,13 +104,29 @@ function Trigger(props: PropsWithChildren) {
   );
 }
 
-function Value(props: {
-  children: (value: string | undefined) => React.ReactNode;
+function File(props: {
+  children: (
+    args: Pick<Context, "progress" | "uploading" | "uuid" | "name">,
+  ) => React.ReactNode;
 }) {
-  const { value } = useContext(Context);
-  return props.children(value);
+  const { uuid, name, uploading, progress } = useContext(Context);
+  return props.children({ uuid, name, uploading, progress });
 }
 
-function FileList() {}
+function emulateFileUpload(
+  onProgress: (percentage: number) => void,
+): Promise<void> {
+  return new Promise((resolve) => {
+    let percentage = 0;
 
-function FileItem() {}
+    const interval = setInterval(() => {
+      percentage += 10;
+      onProgress(percentage);
+
+      if (percentage >= 100) {
+        clearInterval(interval);
+        resolve();
+      }
+    }, 200); // 200ms interval to simulate a 2-second upload time
+  });
+}
