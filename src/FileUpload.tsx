@@ -1,3 +1,4 @@
+import { PropsWithChildren, useState } from "react";
 import HeadlessFileUpload, { type CustomFile } from "./HeadlessFileUpload";
 import { Button } from "./components/ui/button";
 import { cn } from "./utils";
@@ -10,12 +11,27 @@ type Props = {
   className?: string;
 };
 
+function Overlay(props: PropsWithChildren<{ visible: boolean }>) {
+  return (
+    <div
+      className={cn(
+        "absolute inset-0 bg-zinc-100/50 flex justify-center items-center transition opacity-0 pointer-events-none",
+        { "opacity-100": props.visible },
+      )}
+    >
+      {props.children}
+    </div>
+  );
+}
+
 export function ImageField(props: {
   keyName?: string | undefined;
   onFileChange?: (file: File | undefined) => void;
   onUploadComplete?: (keyName: string) => void;
   className?: string;
 }) {
+  const [hover, setHover] = useState(false);
+
   return (
     <HeadlessFileUpload
       keyName={props.keyName}
@@ -32,22 +48,23 @@ export function ImageField(props: {
               )}
             >
               {file == undefined ? (
-                <Button>Upload</Button>
+                <Button>Upload image</Button>
               ) : (
                 <>
                   <img
                     className="object-cover absolute h-full w-full"
                     src={file.blobUrl}
+                    onMouseEnter={() => setHover(true)}
+                    onMouseLeave={() => setHover(false)}
                   />
 
-                  <div
-                    className={cn(
-                      "absolute inset-0 bg-zinc-100/50 flex justify-center items-center transition opacity-0",
-                      { "opacity-100": file.uploading && file.progress < 100 },
-                    )}
-                  >
+                  <Overlay visible={file.uploading && file.progress < 100}>
                     <LoadingSpinner />
-                  </div>
+                  </Overlay>
+
+                  <Overlay visible={hover}>
+                    <Button>Change image</Button>
+                  </Overlay>
                 </>
               )}
             </HeadlessFileUpload.Trigger>
