@@ -9,28 +9,27 @@ import {
 } from "react";
 
 type Context = {
-  name: string | undefined;
-  uuid: string | undefined;
   ref: React.RefObject<HTMLInputElement>;
+};
+
+export type CustomFile = {
+  name: string;
+  uuid: string;
   progress: number;
   uploading: boolean;
-  blobUrl: string | undefined;
+  blobUrl: string;
 };
 
 const Context = createContext<Context>(undefined as any);
-
-export type CustomFile = {
-  [K in keyof Pick<
-    Context,
-    "progress" | "uploading" | "uuid" | "name" | "blobUrl"
-  >]-?: NonNullable<Context[K]>;
-} & { reset: () => void };
 
 export default function UploadFile(props: {
   keyName?: string | undefined;
   onFileChange?: (file: File | undefined) => void;
   onUploadComplete?: (keyName: string) => void;
-  children: (args: CustomFile | undefined) => React.ReactNode;
+  children: (args: {
+    file: CustomFile | undefined;
+    reset: () => void;
+  }) => React.ReactNode;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState(0);
@@ -75,18 +74,20 @@ export default function UploadFile(props: {
   const render = () => {
     if (blobUrl && uuid && name)
       return props.children({
-        uuid,
-        name,
-        uploading,
-        progress,
-        blobUrl,
+        file: {
+          uuid,
+          name,
+          uploading,
+          progress,
+          blobUrl,
+        },
         reset,
       });
-    return props.children(undefined);
+    return props.children({ file: undefined, reset });
   };
 
   return (
-    <Context.Provider value={{ uuid, name, ref, progress, uploading, blobUrl }}>
+    <Context.Provider value={{ ref }}>
       {render()}
       <input
         type="file"

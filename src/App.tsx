@@ -36,7 +36,7 @@ function App() {
                     onClick={() => setOpen(toggle)}
                   >
                     <ChevronDownIcon
-                      className={cn("w-4", { "rotate-180": open })}
+                      className={cn("w-4 transition", { "-scale-y-100": open })}
                     />
                   </button>
                 </>
@@ -49,7 +49,7 @@ function App() {
                 {files.map((file) => (
                   <div
                     key={file.uuid}
-                    className="border-b last:border-none px-3 py-2 relative flex justify-between"
+                    className="border-b last:border-none px-3 py-2 relative flex justify-between items-center text-sm"
                   >
                     <span>{file.name}</span>
                     <span>

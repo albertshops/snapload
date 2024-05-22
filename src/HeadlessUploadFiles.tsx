@@ -3,7 +3,6 @@ import {
   ComponentProps,
   createContext,
   useContext,
-  useEffect,
   useRef,
   useState,
 } from "react";
@@ -18,6 +17,7 @@ type CustomFile = {
   progress: number;
   uploading: boolean;
   blobUrl: string;
+  keyName: string;
 };
 
 const Context = createContext<Context>(undefined as any);
@@ -46,6 +46,7 @@ export default function UploadFiles(props: {
         progress: 0,
         uploading: true,
         blobUrl: URL.createObjectURL(file),
+        keyName: `${uuid}/${file.name}`,
       };
     }
 
@@ -70,11 +71,15 @@ export default function UploadFiles(props: {
             uploading: false,
           },
         }));
+
+        if (props.onUploadComplete) {
+          props.onUploadComplete(file.keyName);
+        }
       }),
     );
 
     if (props.onUploadsComplete) {
-      props.onUploadsComplete(Object.values(customFiles).map((f) => f.name));
+      props.onUploadsComplete(Object.values(customFiles).map((f) => f.keyName));
     }
   };
 

@@ -38,7 +38,7 @@ export function ImageField(props: {
       onFileChange={props.onFileChange}
       onUploadComplete={props.onUploadComplete}
     >
-      {(file) => {
+      {({ file, reset }) => {
         return (
           <div className="flex flex-col gap-1">
             <HeadlessUploadFile.Trigger
@@ -69,7 +69,9 @@ export function ImageField(props: {
               )}
             </HeadlessUploadFile.Trigger>
 
-            <div className="w-96 flex justify-between">{fileField(file)}</div>
+            <div className="w-96 flex justify-between">
+              {fileField({ file, reset })}
+            </div>
           </div>
         );
       }}
@@ -89,7 +91,9 @@ export function FileField(props: Props) {
   );
 }
 
-function fileField(file: CustomFile | undefined) {
+function fileField(args: { file: CustomFile | undefined; reset: () => void }) {
+  const { file, reset } = args;
+
   const chooseFile = (
     <HeadlessUploadFile.Trigger className="border px-3 py-2 rounded text-sm w-full flex font-semibold hover:bg-zinc-100 transition text-zinc-800">
       Choose file...
@@ -109,10 +113,7 @@ function fileField(file: CustomFile | undefined) {
           )}
         </HeadlessUploadFile.Trigger>
         <span className="border-r" />
-        <button
-          className="px-2 hover:bg-zinc-100 transition"
-          onClick={file.reset}
-        >
+        <button className="px-2 hover:bg-zinc-100 transition" onClick={reset}>
           <RemoveIcon className="w-4 text-red-600" />
         </button>
       </div>
