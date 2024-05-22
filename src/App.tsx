@@ -12,12 +12,14 @@ function App() {
         onUploadComplete={(keyName) => setValue(keyName)}
         onFileChange={console.log}
       >
-        <FileUpload.Empty>
-          <FileUpload.Trigger>nothing</FileUpload.Trigger>
-        </FileUpload.Empty>
+        {(file) => {
+          if (file == undefined)
+            return <FileUpload.Trigger>nothing</FileUpload.Trigger>;
 
-        <FileUpload.File>
-          {(file) => (
+          if (file.uploading == false)
+            return <FileUpload.Trigger>nothing</FileUpload.Trigger>;
+
+          return (
             <div>
               <p>uploading: {file.uploading ? "yes" : "no"}</p>
               <p>progress: {file.progress}</p>
@@ -26,8 +28,8 @@ function App() {
                 keyName: {file.uuid}/{file.name}
               </FileUpload.Trigger>
             </div>
-          )}
-        </FileUpload.File>
+          );
+        }}
       </FileUpload>
 
       <button onClick={() => setValue("id/name.jpg")}>change</button>

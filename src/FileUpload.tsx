@@ -19,13 +19,21 @@ type Context = {
 
 const Context = createContext<Context>(undefined as any);
 
-export default function FileUpload(
-  props: PropsWithChildren<{
-    keyName: string | undefined;
-    onFileChange?: (file: File | undefined) => void;
-    onUploadComplete?: (keyName: string) => void;
-  }>,
-) {
+export default function FileUpload(props: {
+  keyName: string | undefined;
+  onFileChange?: (file: File | undefined) => void;
+  onUploadComplete?: (keyName: string) => void;
+  children: (
+    args:
+      | {
+          [K in keyof Pick<
+            Context,
+            "progress" | "uploading" | "uuid" | "name" | "blobUrl"
+          >]-?: NonNullable<Context[K]>;
+        }
+      | undefined,
+  ) => React.ReactNode;
+}) {
   const ref = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
@@ -34,7 +42,6 @@ export default function FileUpload(
   const [name, setName] = useState<string>();
 
   useEffect(() => {
-    console.log("kn", props.keyName);
     const [uuid, name] = props.keyName?.split("/") ?? [undefined, undefined];
     setUuid(uuid);
     setName(name);
@@ -64,9 +71,15 @@ export default function FileUpload(
     }
   };
 
+  const render = () => {
+    if (blobUrl && uuid && name)
+      return props.children({ uuid, name, uploading, progress, blobUrl });
+    return props.children(undefined);
+  };
+
   return (
     <Context.Provider value={{ uuid, name, ref, progress, uploading, blobUrl }}>
-      {props.children}
+      {render()}
       <input
         type="file"
         ref={ref}
@@ -79,37 +92,7 @@ export default function FileUpload(
 
 FileUpload.Trigger = function Trigger(props: PropsWithChildren) {
   const { ref } = useContext(Context);
-
-  return (
-    <button
-      onClick={() => {
-        ref.current?.click();
-      }}
-    >
-      {props.children}
-    </button>
-  );
-};
-
-FileUpload.Empty = function Empty(props: PropsWithChildren) {
-  const { uuid } = useContext(Context);
-  if (uuid != undefined) return <></>;
-  return props.children;
-};
-
-FileUpload.File = function File(props: {
-  children: (args: {
-    [K in keyof Pick<
-      Context,
-      "progress" | "uploading" | "uuid" | "name" | "blobUrl"
-    >]-?: NonNullable<Context[K]>;
-  }) => React.ReactNode;
-}) {
-  const { blobUrl, uuid, name, uploading, progress } = useContext(Context);
-  if (uuid == undefined) return <></>;
-  if (name == undefined) return <></>;
-
-  return props.children({ uuid, name, uploading, progress, blobUrl: blobUrl! });
+  return <button onClick={() => ref.current?.click()}>{props.children}</button>;
 };
 
 function emulateFileUpload(
