@@ -1,7 +1,7 @@
 import { CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
-import HeadlessFileUpload from "./HeadlessFileUpload";
+import HeadlessFileUpload, { type CustomFile } from "./HeadlessFileUpload";
 import { Button } from "./components/ui/button";
 import { cn } from "./utils";
 import { X as RemoveIcon } from "lucide-react";
@@ -26,8 +26,6 @@ export function ImageField(props: {
   onUploadComplete?: (keyName: string) => void;
   className?: string;
 }) {
-  const [hover, setHover] = useState(false);
-
   return (
     <HeadlessFileUpload
       keyName={props.keyName}
@@ -37,11 +35,7 @@ export function ImageField(props: {
       {(file) => {
         return (
           <div className="flex flex-col gap-1">
-            <HeadlessFileUpload.Trigger
-              className="border w-96 aspect-video rounded border-dashed relative flex justify-center items-center overflow-hidden"
-              onMouseEnter={() => setHover(true)}
-              onMouseLeave={() => setHover(false)}
-            >
+            <HeadlessFileUpload.Trigger className="border w-96 aspect-video rounded border-dashed relative flex justify-center items-center overflow-hidden">
               {file == undefined ? (
                 <Button>Upload</Button>
               ) : (
@@ -58,33 +52,17 @@ export function ImageField(props: {
                     )}
                   >
                     <div className="h-20 w-20">
-                      <CircularProgressbar value={file.progress} />
+                      <CircularProgressbar
+                        value={file.progress}
+                        key={file.uploading ? 1 : 0}
+                      />
                     </div>
                   </div>
                 </>
               )}
             </HeadlessFileUpload.Trigger>
-            <HeadlessFileUpload.Trigger
-              onMouseEnter={() => setHover(true)}
-              onMouseLeave={() => setHover(false)}
-            >
-              <Button variant="outline" className="w-96 flex justify-between">
-                {(() => {
-                  if (hover) return <span>Choose file...</span>;
-                  if (file)
-                    return (
-                      <>
-                        <span>{file.name}</span>
-                        <button className="p-2 pr-0">
-                          <RemoveIcon className="w-4 text-red-600" />
-                        </button>
-                      </>
-                    );
 
-                  return <span>Choose file...</span>;
-                })()}
-              </Button>
-            </HeadlessFileUpload.Trigger>
+            <div className="w-96 flex justify-between">{fileField(file)}</div>
           </div>
         );
       }}
@@ -99,24 +77,33 @@ export function FileField(props: Props) {
       onFileChange={props.onFileChange}
       onUploadComplete={props.onUploadComplete}
     >
-      {(file) => {
-        return (
-          <HeadlessFileUpload.Trigger>
-            <Button variant="outline" className="w-96 flex justify-between">
-              {file ? (
-                <>
-                  <span>{file.name}</span>
-                  <button className="p-2 pr-0">
-                    <RemoveIcon className="w-4" />
-                  </button>
-                </>
-              ) : (
-                <span>Choose file...</span>
-              )}
-            </Button>
-          </HeadlessFileUpload.Trigger>
-        );
-      }}
+      {fileField}
     </HeadlessFileUpload>
   );
+}
+
+function fileField(file: CustomFile | undefined) {
+  const chooseFile = (
+    <HeadlessFileUpload.Trigger className="border px-3 py-2 rounded text-sm w-full flex font-semibold hover:bg-zinc-100 transition text-zinc-800">
+      Choose file...
+    </HeadlessFileUpload.Trigger>
+  );
+
+  if (file)
+    return (
+      <div className="border rounded text-sm w-full flex transition text-zinc-800 justify-between">
+        <HeadlessFileUpload.Trigger className="flex-grow hover:bg-zinc-100 transition px-3 py-2 flex">
+          {file.name}
+        </HeadlessFileUpload.Trigger>
+        <span className="border-r" />
+        <button
+          className="px-2 hover:bg-zinc-100 transition"
+          onClick={file.reset}
+        >
+          <RemoveIcon className="w-4 text-red-600" />
+        </button>
+      </div>
+    );
+
+  return chooseFile;
 }

@@ -1,7 +1,6 @@
 import { v4 } from "uuid";
 import {
   ComponentProps,
-  PropsWithChildren,
   createContext,
   useContext,
   useEffect,
@@ -20,20 +19,18 @@ type Context = {
 
 const Context = createContext<Context>(undefined as any);
 
+export type CustomFile = {
+  [K in keyof Pick<
+    Context,
+    "progress" | "uploading" | "uuid" | "name" | "blobUrl"
+  >]-?: NonNullable<Context[K]>;
+} & { reset: () => void };
+
 export default function FileUpload(props: {
   keyName?: string | undefined;
   onFileChange?: (file: File | undefined) => void;
   onUploadComplete?: (keyName: string) => void;
-  children: (
-    args:
-      | {
-        [K in keyof Pick<
-          Context,
-          "progress" | "uploading" | "uuid" | "name" | "blobUrl"
-        >]-?: NonNullable<Context[K]>;
-      }
-      | undefined,
-  ) => React.ReactNode;
+  children: (args: CustomFile | undefined) => React.ReactNode;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState(0);
@@ -42,14 +39,16 @@ export default function FileUpload(props: {
   const [uuid, setUuid] = useState<string>();
   const [name, setName] = useState<string>();
 
-  useEffect(() => {
+  const reset = () => {
     const [uuid, name] = props.keyName?.split("/") ?? [undefined, undefined];
     setUuid(uuid);
     setName(name);
     setProgress(0);
     setUploading(false);
     setBlobUrl(undefined);
-  }, [props.keyName]);
+  };
+
+  useEffect(reset, [props.keyName]);
 
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files?.length) return;
@@ -75,7 +74,14 @@ export default function FileUpload(props: {
 
   const render = () => {
     if (blobUrl && uuid && name)
-      return props.children({ uuid, name, uploading, progress, blobUrl });
+      return props.children({
+        uuid,
+        name,
+        uploading,
+        progress,
+        blobUrl,
+        reset,
+      });
     return props.children(undefined);
   };
 
