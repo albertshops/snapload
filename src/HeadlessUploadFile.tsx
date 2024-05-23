@@ -2,6 +2,7 @@ import {
   ComponentProps,
   createContext,
   useContext,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -12,28 +13,33 @@ type Context = {
 
 const Context = createContext<Context>(undefined as any);
 
-export type Meta = {
+export type FileUpload = {
   name: string;
   url: string;
   progress: number;
   uploading: boolean;
 };
 
-export function UploadFile<T>(props: {
+export function UploadFile<TResult>(props: {
   name?: string | undefined;
   url?: string | undefined;
   upload: (args: {
     file: File;
     onProgress: (progress: number) => void;
-  }) => Promise<T>;
-  onSuccess?: (file: T) => void;
-  children: (args: { meta: Meta | undefined }) => React.ReactNode;
+  }) => Promise<TResult>;
+  onSuccess?: (result: TResult) => void;
+  children: (file?: FileUpload) => React.ReactNode;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [url, setUrl] = useState(props.url);
   const [name, setName] = useState(props.name);
+
+  useEffect(() => {
+    setName(props.name);
+    setUrl(props.url);
+  }, [props.name, props.url]);
 
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files?.length) return;
@@ -52,17 +58,13 @@ export function UploadFile<T>(props: {
   const render = () => {
     if (name && url)
       return props.children({
-        meta: {
-          name,
-          url,
-          uploading,
-          progress,
-        },
+        name,
+        url,
+        uploading,
+        progress,
       });
 
-    return props.children({
-      meta: undefined,
-    });
+    return props.children();
   };
 
   return (
