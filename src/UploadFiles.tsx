@@ -1,45 +1,44 @@
+import { v4 } from "uuid";
+import HeadlessUploadFiles from "./headless/UploadFiles";
 import { useState } from "react";
-import HeadlessUploadFiles from "./HeadlessUploadFiles";
+import { CheckIcon, ChevronDownIcon } from "lucide-react";
+import { cn } from "./utils";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "./components/ui/popover";
-import { CheckIcon, ChevronDownIcon } from "lucide-react";
-import { cn } from "./utils";
 
-type Props = {
-  keyName?: string | undefined;
-  onFilesChange?: (fileList: FileList) => void;
-  onUploadComplete?: (keyName: string) => void;
-  onUploadsComplete?: (keyName: string[]) => void;
-  className?: string;
+type Result = {
+  key: string;
+  url: string;
 };
 
-export default function UploadFiles(props: Props) {
+type Props = {
+  onSuccess?: (result: Result) => void;
+};
+
+export function UploadFiles(props: Props) {
   const [open, setOpen] = useState(false);
 
   return (
     <HeadlessUploadFiles
-      onFilesChange={(files) => {
-        setOpen(true);
-        if (props.onFilesChange) props.onFilesChange(files);
+      upload={async ({ file, onProgress }) => {
+        const { key, url } = await emulatePresignedUrl(file.name);
+        await emulateUploadFile(onProgress);
+        return { key, url };
       }}
-      onUploadComplete={(keyName) => {
-        if (props.onUploadComplete) props.onUploadComplete(keyName);
-      }}
-      onUploadsComplete={(keyNames) => {
-        setOpen(false);
-        if (props.onUploadsComplete) props.onUploadsComplete(keyNames);
-      }}
+      onSuccess={props.onSuccess}
+      onStart={() => setOpen(true)}
+      onEnd={() => setOpen(false)}
     >
-      {(files) => (
+      {(uploads) => (
         <div className="w-96 flex flex-col">
           <div className="border rounded text-sm w-full flex transition text-zinc-800 justify-between overflow-hidden">
             <HeadlessUploadFiles.Trigger className="flex-grow hover:bg-zinc-100 transition relative">
               <div className="px-3 py-2 flex">Upload files...</div>
             </HeadlessUploadFiles.Trigger>
-            {files.length > 0 && (
+            {uploads.length > 0 && (
               <>
                 <span className="border-r" />
                 <button
@@ -57,24 +56,24 @@ export default function UploadFiles(props: Props) {
           <Popover open={open}>
             <PopoverTrigger className="right-0 left-0" />
             <PopoverContent className="w-96 p-0">
-              {files.map((file) => (
+              {uploads.map((upload) => (
                 <div
-                  key={file.uuid}
+                  key={upload.url}
                   className="border-b last:border-none px-3 py-2 relative flex justify-between items-center text-sm"
                 >
-                  <span>{file.name}</span>
+                  <span>{upload.name}</span>
                   <span>
                     <CheckIcon
                       className={cn("w-4 opacity-0", {
                         "opacity-100":
-                          file.uploading == false && file.progress == 100,
+                          upload.uploading == false && upload.progress == 100,
                       })}
                     />
                   </span>
-                  {file.uploading && (
+                  {upload.uploading && (
                     <div
                       className="h-0.5 bg-primary absolute bottom-0 left-0 transition w-full origin-left"
-                      style={{ transform: `scaleX(${file.progress / 100})` }}
+                      style={{ transform: `scaleX(${upload.progress / 100})` }}
                     />
                   )}
                 </div>
@@ -85,4 +84,33 @@ export default function UploadFiles(props: Props) {
       )}
     </HeadlessUploadFiles>
   );
+}
+
+async function emulatePresignedUrl(filename: string) {
+  return {
+    key: `${v4()}/${filename}`,
+    url: `aws.com/${v4()}/${filename}`,
+  };
+}
+
+function emulateUploadFile(
+  onProgress: (percentage: number) => void,
+): Promise<void> {
+  return new Promise((resolve) => {
+    let percentage = 0;
+
+    const interval = setInterval(
+      () => {
+        percentage += 5 + Math.random() * 10;
+        onProgress(percentage);
+
+        if (percentage >= 100) {
+          onProgress(100);
+          clearInterval(interval);
+          resolve();
+        }
+      },
+      150 + Math.random() * 100,
+    );
+  });
 }

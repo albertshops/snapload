@@ -1,19 +1,18 @@
 import { useState } from "react";
-import { FileField } from "./UploadFile";
+import { ImageField } from "./ImageField";
 
 export default function App() {
   const [name, setName] = useState<string>();
   const [url, setUrl] = useState<string>();
-
   return (
     <div className="p-10">
-      <FileField
+      <ImageField
         name={name}
         url={url}
-        onSuccess={({ key, url }) => {
-          const name = key.split("/")[1];
+        onSuccess={(result) => {
+          const name = result.key.split("/")[1];
           setName(name);
-          setUrl(url);
+          setUrl(result.url);
         }}
         clear={() => {
           setName(undefined);

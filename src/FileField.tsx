@@ -1,5 +1,5 @@
 import { v4 } from "uuid";
-import { UploadFile as HeadlessUploadFile } from "./HeadlessUploadFile";
+import { UploadFile as HeadlessUploadFile } from "./headless/UploadFile";
 import { X as RemoveIcon } from "lucide-react";
 
 type Result = {

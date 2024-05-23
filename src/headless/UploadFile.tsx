@@ -37,6 +37,7 @@ export function UploadFile<TResult>(props: {
   const [name, setName] = useState(props.name);
 
   useEffect(() => {
+    console.log(props.name, props.url);
     setName(props.name);
     setUrl(props.url);
   }, [props.name, props.url]);
