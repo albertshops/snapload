@@ -1,5 +1,5 @@
 import { v4 } from "uuid";
-import { UploadFile } from "./UploadFile";
+import { UploadFile } from "./HeadlessUploadFile";
 
 export default function App() {
   return (
