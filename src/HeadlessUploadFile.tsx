@@ -12,7 +12,7 @@ type Context = {
 
 const Context = createContext<Context>(undefined as any);
 
-type Meta = {
+export type Meta = {
   name: string;
   url: string;
   progress: number;
