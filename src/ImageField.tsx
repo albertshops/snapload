@@ -15,6 +15,8 @@ type Props = {
   url?: string | undefined;
   onSuccess?: (result: Result) => void;
   clear?: () => void;
+  imgClassName?: string;
+  containerClassName?: string;
 };
 
 export function ImageField(props: Props) {
@@ -33,11 +35,12 @@ export function ImageField(props: Props) {
     >
       {(file) => {
         return (
-          <div className="flex flex-col gap-1">
+          <div className={cn("flex flex-col gap-1", props.containerClassName)}>
             <HeadlessUploadFile.Trigger
               className={cn(
-                "w-96 aspect-video rounded border relative flex justify-center items-center overflow-hidden",
+                "w-full aspect-video rounded border relative flex justify-center items-center overflow-hidden",
                 { "border-dashed": file == undefined },
+                props.imgClassName,
               )}
             >
               {file == undefined ? (
@@ -62,7 +65,7 @@ export function ImageField(props: Props) {
               )}
             </HeadlessUploadFile.Trigger>
 
-            <div className="w-96 flex justify-between">
+            <div className="w-full flex justify-between">
               {file == undefined ? (
                 <HeadlessUploadFile.Trigger className="border px-3 py-2 rounded text-sm w-full flex font-semibold hover:bg-zinc-100 transition text-zinc-800">
                   Choose file...

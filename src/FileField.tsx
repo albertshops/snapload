@@ -12,6 +12,7 @@ type Props = {
   url?: string | undefined;
   onSuccess?: (result: Result) => void;
   clear?: () => void;
+  containerClassName?: string;
 };
 
 export function FileField(props: Props) {
@@ -26,36 +27,34 @@ export function FileField(props: Props) {
         return { key, url };
       }}
     >
-      {(file) => {
-        if (file == undefined) {
-          return (
+      {(file) => (
+        <div className={props.containerClassName}>
+          {file == undefined ? (
             <HeadlessUploadFile.Trigger className="border px-3 py-2 rounded text-sm w-full flex font-semibold hover:bg-zinc-100 transition text-zinc-800">
               Choose file...
             </HeadlessUploadFile.Trigger>
-          );
-        }
-
-        return (
-          <div className="border rounded text-sm w-full flex transition text-zinc-800 justify-between overflow-hidden">
-            <HeadlessUploadFile.Trigger className="flex-grow hover:bg-zinc-100 transition relative">
-              <div className="px-3 py-2 flex">{file.name}</div>
-              {file.uploading && (
-                <div
-                  className="h-0.5 bg-primary absolute bottom-0 left-0 transition w-full origin-left"
-                  style={{ transform: `scaleX(${file.progress / 100})` }}
-                />
-              )}
-            </HeadlessUploadFile.Trigger>
-            <span className="border-r" />
-            <button
-              className="px-2 hover:bg-zinc-100 transition"
-              onClick={props.clear}
-            >
-              <RemoveIcon className="w-4 text-red-600" />
-            </button>
-          </div>
-        );
-      }}
+          ) : (
+            <div className="border rounded text-sm w-full flex transition text-zinc-800 justify-between overflow-hidden">
+              <HeadlessUploadFile.Trigger className="flex-grow hover:bg-zinc-100 transition relative">
+                <div className="px-3 py-2 flex">{file.name}</div>
+                {file.uploading && (
+                  <div
+                    className="h-0.5 bg-primary absolute bottom-0 left-0 transition w-full origin-left"
+                    style={{ transform: `scaleX(${file.progress / 100})` }}
+                  />
+                )}
+              </HeadlessUploadFile.Trigger>
+              <span className="border-r" />
+              <button
+                className="px-2 hover:bg-zinc-100 transition"
+                onClick={props.clear}
+              >
+                <RemoveIcon className="w-4 text-red-600" />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </HeadlessUploadFile>
   );
 }

@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { ImageField } from "./ImageField";
+import { FileField } from "./FileField";
 
 export default function App() {
   const [name, setName] = useState<string>();
   const [url, setUrl] = useState<string>();
   return (
-    <div className="p-10">
+    <div className="p-10 flex flex-col gap-4">
       <ImageField
+        imgClassName="aspect-square"
+        containerClassName="w-96"
         name={name}
         url={url}
         onSuccess={(result) => {
@@ -19,6 +22,8 @@ export default function App() {
           setUrl(undefined);
         }}
       />
+
+      <FileField containerClassName="w-96" />
     </div>
   );
 }
